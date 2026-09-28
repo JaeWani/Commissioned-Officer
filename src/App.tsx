@@ -28,6 +28,7 @@ type Result = {
   scores: Record<CareerTypeCode, number>;
   primaryType: string;
   deliveryMessage: string;
+  reportPdf: Blob;
 };
 
 type QuestionTextOverride = {
@@ -147,7 +148,7 @@ function App() {
       sha256: await sha256Hex(pdf),
     });
 
-    return prepared;
+    return { prepared, pdf };
   }
 
   async function sendTenRandomTestReports() {
@@ -243,12 +244,13 @@ function App() {
     setMessage('결과지를 생성하고 안전하게 저장하고 있습니다. 잠시만 기다려 주세요.');
 
     try {
-      const prepared = await prepareAndDeliverReport(profile, answers);
+      const { prepared, pdf } = await prepareAndDeliverReport(profile, answers);
 
       setResult({
         scores: prepared.result.scores as Record<CareerTypeCode, number>,
         primaryType: prepared.result.primaryType,
         deliveryMessage: `${profile.email.trim()}로 결과지를 발송할 준비가 완료되었습니다. 이메일이 도착할 때까지 잠시 기다려 주세요.`,
+        reportPdf: pdf,
       });
       setMessage('');
       window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -265,6 +267,20 @@ function App() {
     setPage(0);
     setResult(null);
     setMessage('');
+  }
+
+  function downloadReport() {
+    if (!result) return;
+
+    const safeName = profile.name.trim().replace(/[\\/:*?"<>|]/g, '_') || '응답자';
+    const downloadUrl = URL.createObjectURL(result.reportPdf);
+    const link = document.createElement('a');
+    link.href = downloadUrl;
+    link.download = `${safeName}_진로적합도_결과지.pdf`;
+    document.body.append(link);
+    link.click();
+    link.remove();
+    window.setTimeout(() => URL.revokeObjectURL(downloadUrl), 0);
   }
 
   if (result) {
@@ -285,9 +301,22 @@ function App() {
             ))}
           </div>
 
-          <p className="result-note">
-            {result.deliveryMessage}
-          </p>
+          <section className="result-delivery" aria-labelledby="delivery-title">
+            <div className="result-delivery-heading">
+              <h2 id="delivery-title">결과지 받기</h2>
+              <p className="result-note">{result.deliveryMessage}</p>
+            </div>
+            <div className="result-delivery-actions">
+              <button className="email-delivery-button" type="button" disabled>
+                <span>이메일로 결과 받기</span>
+                <small>{profile.email.trim()}로 발송 요청됨</small>
+              </button>
+              <button className="download-report-button" type="button" onClick={downloadReport}>
+                <span>결과지 다운로드</span>
+                <small>PDF 파일로 바로 저장</small>
+              </button>
+            </div>
+          </section>
           <button className="secondary-button" type="button" onClick={resetSurvey}>
             새 설문 시작
           </button>

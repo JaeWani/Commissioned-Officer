@@ -403,6 +403,83 @@ h2 {
   margin-bottom: 22px;
 }
 
+.result-delivery {
+  display: grid;
+  gap: 16px;
+  margin-bottom: 24px;
+  padding: 20px;
+  border: 1px solid #d9e2ec;
+  border-radius: 12px;
+  background: #f8fbfd;
+}
+
+.result-delivery-heading h2 {
+  margin-bottom: 6px;
+  font-size: 1rem;
+}
+
+.result-delivery .result-note {
+  margin: 0;
+}
+
+.result-delivery-actions {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.email-delivery-button,
+.download-report-button {
+  display: grid;
+  min-height: 76px;
+  padding: 13px 16px;
+  border-radius: 9px;
+  text-align: left;
+}
+
+.email-delivery-button span,
+.download-report-button span {
+  font-size: 0.95rem;
+  font-weight: 800;
+}
+
+.email-delivery-button small,
+.download-report-button small {
+  margin-top: 4px;
+  font-size: 0.76rem;
+  font-weight: 600;
+}
+
+.email-delivery-button {
+  border: 1px solid #b9deda;
+  background: #eaf8f7;
+  color: #176364;
+  opacity: 1;
+}
+
+.email-delivery-button:disabled {
+  cursor: default;
+  opacity: 1;
+}
+
+.email-delivery-button small {
+  color: #357a7b;
+}
+
+.download-report-button {
+  border: 1px solid #1f6465;
+  background: #1f6465;
+  color: #ffffff;
+}
+
+.download-report-button:hover {
+  background: #174e4f;
+}
+
+.download-report-button small {
+  color: #d5f1ef;
+}
+
 .admin-shell {
   display: grid;
   min-height: 100vh;
@@ -911,7 +988,8 @@ h2 {
   .profile-grid,
   .score-grid,
   .admin-stat-grid,
-  .admin-email-stats {
+  .admin-email-stats,
+  .result-delivery-actions {
     grid-template-columns: 1fr;
   }
 
