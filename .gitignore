@@ -4,6 +4,7 @@ dist/
 .env.*
 !.env.example
 !.env.production
+!.env.github-pages
 *.tsbuildinfo
 .tmp-*/
 supabase/.temp/
