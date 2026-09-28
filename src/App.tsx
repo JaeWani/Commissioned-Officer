@@ -1,13 +1,15 @@
-import { type FormEvent, useMemo, useState } from 'react';
+import { type FormEvent, useEffect, useMemo, useState } from 'react';
 
 import {
   careerTypes,
   scoreLabels,
   surveyQuestions,
   type CareerTypeCode,
+  type SurveyQuestion,
 } from './features/survey/questions';
 import { createReportPdf } from './lib/reportPdf';
 import { invokeFunction, sha256Hex, uploadSignedPdf, type PreparedSubmissionResponse } from './lib/supabase';
+import { AdminPage } from './features/admin/AdminPage';
 
 const QUESTIONS_PER_PAGE = 6;
 const testMbtiOptions = ['INTJ', 'ENFP', 'ISTP', 'ESFJ', 'INFJ', 'ESTP'];
@@ -28,6 +30,11 @@ type Result = {
   deliveryMessage: string;
 };
 
+type QuestionTextOverride = {
+  question_number: number;
+  text: string;
+};
+
 const initialProfile: Profile = {
   consent: false,
   name: '',
@@ -37,20 +44,37 @@ const initialProfile: Profile = {
 };
 
 function App() {
+  if (window.location.hash === '#/admin') return <AdminPage />;
+
   const [profile, setProfile] = useState<Profile>(initialProfile);
   const [answers, setAnswers] = useState<Answers>({});
   const [page, setPage] = useState(0);
   const [message, setMessage] = useState('');
   const [result, setResult] = useState<Result | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [questions, setQuestions] = useState<SurveyQuestion[]>(surveyQuestions);
 
-  const pageCount = Math.ceil(surveyQuestions.length / QUESTIONS_PER_PAGE);
-  const currentQuestions = surveyQuestions.slice(
+  useEffect(() => {
+    invokeFunction<QuestionTextOverride[]>('survey-questions', {})
+      .then((overrides) => {
+        const textByNumber = new Map(overrides.map((item) => [item.question_number, item.text]));
+        setQuestions(surveyQuestions.map((question) => ({
+          ...question,
+          text: textByNumber.get(question.id) ?? question.text,
+        })));
+      })
+      .catch(() => {
+        // The embedded wording remains available if the content endpoint is unavailable.
+      });
+  }, []);
+
+  const pageCount = Math.ceil(questions.length / QUESTIONS_PER_PAGE);
+  const currentQuestions = questions.slice(
     page * QUESTIONS_PER_PAGE,
     (page + 1) * QUESTIONS_PER_PAGE,
   );
   const answeredCount = Object.keys(answers).length;
-  const completion = Math.round((answeredCount / surveyQuestions.length) * 100);
+  const completion = Math.round((answeredCount / questions.length) * 100);
   const isDevelopment = import.meta.env.DEV;
 
   const profileError = useMemo(() => {
@@ -83,7 +107,7 @@ function App() {
 
   function fillTestAnswers() {
     const testAnswers = Object.fromEntries(
-      surveyQuestions.map((question) => [question.id, ((question.id * 7) % 5) + 1]),
+      questions.map((question) => [question.id, ((question.id * 7) % 5) + 1]),
     ) as Answers;
     setAnswers(testAnswers);
     setPage(pageCount - 1);
@@ -93,7 +117,7 @@ function App() {
 
   function createRandomTestAnswers() {
     return Object.fromEntries(
-      surveyQuestions.map((question) => [question.id, Math.floor(Math.random() * 5) + 1]),
+      questions.map((question) => [question.id, Math.floor(Math.random() * 5) + 1]),
     ) as Answers;
   }
 
@@ -114,6 +138,7 @@ function App() {
       primaryType: prepared.result.primaryType,
       aptitudeDescription: prepared.result.aptitudeDescription,
       scores: prepared.result.scores,
+      documentTexts: prepared.result.documentTexts,
     });
     await uploadSignedPdf(prepared.report.signedUploadUrl, pdf);
     await invokeFunction('complete-submission', {
@@ -205,7 +230,7 @@ function App() {
       return;
     }
 
-    const firstMissingQuestion = surveyQuestions.find(
+    const firstMissingQuestion = questions.find(
       (question) => answers[question.id] === undefined,
     );
     if (firstMissingQuestion) {
@@ -292,7 +317,7 @@ function App() {
 
         <section className="progress-section" aria-label="설문 진행 상황">
           <div className="progress-label">
-            <span>응답 완료 {answeredCount} / {surveyQuestions.length}</span>
+            <span>응답 완료 {answeredCount} / {questions.length}</span>
             <span>{completion}%</span>
           </div>
           <div className="progress-track" aria-hidden="true">

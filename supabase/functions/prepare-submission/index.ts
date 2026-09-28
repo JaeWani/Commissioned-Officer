@@ -24,6 +24,11 @@ Deno.serve(async (request) => {
 
     if (contentError || !content) throw new Error('결과 해설 콘텐츠를 찾을 수 없습니다.');
 
+    const { data: documentTexts, error: documentTextsError } = await supabase
+      .from('report_document_texts')
+      .select('content_key, text');
+    if (documentTextsError) throw new Error('결과지 문구를 불러오지 못했습니다.');
+
     const provisionalId = crypto.randomUUID();
     const storagePath = `submissions/${provisionalId}/${TEMPLATE_VERSION}.pdf`;
     const { data: submissionId, error: submissionError } = await supabase.rpc(
@@ -64,6 +69,7 @@ Deno.serve(async (request) => {
         aptitudeDescription: content.detail,
         scores: prepared.scores,
         contentVersion: content.version,
+        documentTexts: Object.fromEntries((documentTexts ?? []).map((item) => [item.content_key, item.text])),
       },
     }, 201);
   } catch (error) {

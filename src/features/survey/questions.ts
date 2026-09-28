@@ -9,13 +9,13 @@ export const careerTypes = [
 
 export type CareerTypeCode = (typeof careerTypes)[number]['code'];
 
-type SurveyQuestion = {
+export type SurveyQuestion = {
   id: number;
   type: CareerTypeCode;
   text: string;
 };
 
-const questionTexts = [
+export const defaultQuestionTexts = [
   '군 장비(차량, 화기, 장비)를 직접 다루고 정비하는 것이 좋다',
   '군 장비나 시스템의 작동 원리를 분석하는 것이 흥미롭다',
   '군 홍보물, 영상, 디자인 작업에 관심이 있다',
@@ -90,7 +90,7 @@ const questionTexts = [
   '작은 행정 오류도 전체 임무에 영향을 줄 수 있다고 생각한다',
 ] as const;
 
-export const surveyQuestions: SurveyQuestion[] = questionTexts.map((text, index) => ({
+export const surveyQuestions: SurveyQuestion[] = defaultQuestionTexts.map((text, index) => ({
   id: index + 1,
   type: careerTypes[index % careerTypes.length].code,
   text,
