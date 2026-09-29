@@ -5,5 +5,5 @@ export default defineConfig(({ mode }) => ({
   plugins: [react()],
   // GitHub project Pages is served below the repository name, while local
   // development remains available from the root URL.
-  base: mode === 'github-pages' ? '/Officer-Career-Aptitude-Test/' : '/',
+  base: mode === 'github-pages' ? '/Commissioned-Officer/' : '/',
 }));

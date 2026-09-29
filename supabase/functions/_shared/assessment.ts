@@ -1,5 +1,9 @@
 export const TYPE_ORDER = ['R', 'I', 'A', 'S', 'E', 'C'] as const;
 
+// Question numbers are assigned in TYPE_ORDER. Keep the tie-break policy
+// separate so changing a display preference never changes score allocation.
+export const TIE_BREAK_ORDER = ['E', 'R', 'S', 'C', 'A', 'I'] as const;
+
 export type TypeCode = (typeof TYPE_ORDER)[number];
 
 export type PreparedSubmission = {
@@ -28,7 +32,7 @@ export function calculateScores(answers: Record<string, number>) {
     scores[type] += answers[String(questionNumber)];
   }
 
-  const primaryType = TYPE_ORDER.reduce((leading, type) =>
+  const primaryType = TIE_BREAK_ORDER.reduce((leading, type) =>
     scores[type] > scores[leading] ? type : leading,
   );
 
